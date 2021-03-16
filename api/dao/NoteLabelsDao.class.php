@@ -3,7 +3,7 @@ require_once dirname(__File__)."/BaseDao.class.php";
 
 class NoteLabelDao extends BaseDao {
 
-  public function__construck(){
+  public function __construct(){
     perent::__construct("notelabel");
   }
 }
