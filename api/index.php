@@ -1,50 +1,44 @@
 <?php
-require_once dirname(__FILE__)."/dao/UserDao.class.php";
-require dirname(__FILE__). '/../vendor/autoload.php';
-Flight::register('userDao', 'UserDao');
-Flight::route('GET /users', function(){
+require_once dirname(__FILE__) . '/../vendor/autoload.php';
+require_once dirname(__FILE__) . '/services/UserService.class.php';
 
-  $user=Flight::userDao()->get_all(0,10);
-  Flight::json($user);
+Flight::set('flight.log_errors',TRUE);
 
+//error handeling
+Flight::map('error', function(Exception $ex){
+  Flight::json(["message"=>$ex->getMessage()],$ex->getCode()?$ex->getCode():500);
 });
-Flight::route('GET /users/@id', function($id){
 
-  $user=Flight::userDao()->get_by_id($id);
-  Flight::json($user);
-
-
+//reading query params from URL
+Flight::map('query',function($name, $default_value = NULL){
+  $request = Flight::request();
+  $query_param = @$request->query->getData()[$name];
+  $query_param = $query_param ? $query_param : $default_value;
+  return $query_param;
 });
-Flight::route("POST /users", function(){
-  $request = Flight::request();
-  $data = $request->data->getData();
 
-  $user = Flight::userDao()->add($data);
-  Flight::json($user);
+Flight::map('header', function($name){
+  $headers = getallheaders();
+  return @$headers[$name];
+});
 
+Flight::route('GET /swagger', function(){
+  $openapi = @\OpenApi\scan(dirname(__FILE__)."/routes");
+  header('Content-Type: application/json');
+  echo $openapi->toJson();
+});
 
+Flight::route('GET /', function(){
+  Flight::redirect("/docs");
+});
 
-
-
-  });
-
-
-Flight::route("PUT /users/@id", function($id){
-  $request = Flight::request();
-  $data = $request->data->getData();
-
-  Flight::userDao()->update($id,$data);
-  $user = Flight::userDao()->get_by_id($id);
-
-
-
-
-  Flight::json($user);
-
-  });
+//register BLL services
+Flight::register('userService', 'UserService');
+//include all routes
+//require_once dirname(__FILE__) . "/routes/middleware.php";
+require_once dirname(__FILE__) . "/routes/users.php";
 
 
-  Flight::start();
+Flight::start();
 
-
- ?>
+?>

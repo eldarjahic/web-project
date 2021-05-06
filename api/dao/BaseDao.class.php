@@ -2,6 +2,31 @@
 require_once dirname(__FILE__)."/../config.php";
 
 class BaseDao {
+
+  public function beginTransaction(){
+    $this->connection->beginTransaction();
+  }
+  
+  public function commit(){
+    $this->connection->commit();
+  }
+
+  public function rollBack(){
+    $this->connection->rollBack();
+  }
+
+  public function parse_order($order){
+    switch(substr($order,0,1)){
+      case '-': $order_direction = "ASC"; break;
+      case '+': $order_direction = "DESC"; break;
+      default: throw new Exception("Invalid order format. First character should be either + or -."); break;
+    };
+
+    $order_column = trim($this->connection->quote(substr($order,1)), "'");
+    return [$order_column,$order_direction];
+  }
+
+
   protected $connection;
 
   private $table;
